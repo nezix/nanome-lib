@@ -8,7 +8,7 @@ class Integration():
         self.calculate_esp = None
         self.minimization_start = None
         self.minimization_stop = None
-        self.export_file = None
+        self.file_export = None
 
     def _call(self, name, request):
         callback = getattr(self, name, None)
