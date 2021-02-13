@@ -5,6 +5,7 @@ import ntpath
 from nanome.api.ui import Menu
 from nanome.api.ui import LayoutNode
 from nanome.util.logs import Logs
+from nanome.util.file import FileError
 
 NAME = "File Explorer"
 DESCRIPTION = "Allows you to browse your files"
@@ -30,7 +31,8 @@ class FileExplorer(nanome.PluginInstance):
         self.back_button.register_pressed_callback(self.back_pressed)
         self.selected_button = None
         self.fetch_children()
-        self.fetch_wd()
+        #self.fetch_wd()
+        self.files.cd("~/", self.directory_changed)
         self.temp_dir = tempfile.mkdtemp()
         # self.test_path = "C:\\Users\\ETHANV~1\\AppData\\Local\\Temp\\tmpuzepx_cf\\file.jpg"
         # self.test_path1 = "C:\\Users\\ETHANV~1\\AppData\\Local\\Temp\\tmpuzepx_cf\\1.jpg"
@@ -128,8 +130,11 @@ class FileExplorer(nanome.PluginInstance):
         self.files.cd("..", self.directory_changed)
 
     def directory_changed(self, *args):
-        self.fetch_wd()
-        self.fetch_children()
+        if FileError.no_error == args[0]:
+            self.fetch_wd()
+            self.fetch_children()
+        else:
+            Logs.error(args[0])
 
     def path_leaf(self, path):
         head, tail = ntpath.split(path)
