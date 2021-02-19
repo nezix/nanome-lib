@@ -1,3 +1,4 @@
+from nanome._internal._structure._io._mmcif.structure import structure
 import nanome
 import os
 import tempfile
@@ -15,6 +16,15 @@ HAS_ADVANCED_OPTIONS = False
 test_assets = os.getcwd() + ("/testing/test_assets")
 
 
+class Icon():
+    up = os.path.expanduser("~/Desktop/PluginIcons/Up.png")
+    folder = os.path.expanduser("~/Desktop/PluginIcons/Folder.png")
+    image = os.path.expanduser("~/Desktop/PluginIcons/Image.png")
+    pdf = os.path.expanduser("~/Desktop/PluginIcons/PDF.png")
+    structure = os.path.expanduser("~/Desktop/PluginIcons/Structures.png")
+    workspace = os.path.expanduser("~/Desktop/PluginIcons/Workspace.png")
+
+
 class FileExplorer(nanome.PluginInstance):
 
     def start(self):
@@ -28,11 +38,12 @@ class FileExplorer(nanome.PluginInstance):
         self.save_button = self.menu.root.find_node("SaveButton", True).get_content()
         self.save_button.register_pressed_callback(self.save_pressed)
         self.back_button = self.menu.root.find_node("back", True).get_content()
+        self.back_button.icon.value.set_all(Icon.up)
         self.back_button.register_pressed_callback(self.back_pressed)
         self.selected_button = None
         self.fetch_children()
-        #self.fetch_wd()
-        self.files.cd("~/", self.directory_changed)
+        # self.fetch_wd()
+        self.files.cd("~", self.directory_changed)
         self.temp_dir = tempfile.mkdtemp()
         # self.test_path = "C:\\Users\\ETHANV~1\\AppData\\Local\\Temp\\tmpuzepx_cf\\file.jpg"
         # self.test_path1 = "C:\\Users\\ETHANV~1\\AppData\\Local\\Temp\\tmpuzepx_cf\\1.jpg"
@@ -69,17 +80,53 @@ class FileExplorer(nanome.PluginInstance):
         self.files.ls(".", self.__set_children)
 
     def __set_children(self, error, files):
-        if error != nanome.util.FileError.no_error: # If API couldn't access directory, display error
+        if error != nanome.util.FileError.no_error:  # If API couldn't access directory, display error
             nanome.util.Logs.error("Directory request error:", str(error))
             return
         self.grid.items = []
         for file in files:
             item = self.create_file_rep(file)
-            self.grid.items.append(item)
+            if item != None:
+                self.grid.items.append(item)
         if self.running:
             self.update_content(self.grid)
 
     def create_file_rep(self, entry):
+        extension = os.path.splitext(entry.name)[1].lower()
+        icon = ""
+        if extension == "":
+            icon = Icon.folder
+        elif extension == ".pdf":
+            icon = Icon.pdf
+        elif extension == ".jpeg" or extension == ".jpg" or extension == ".png":
+            icon = Icon.image
+        elif extension == ".nanome":
+            icon = Icon.workspace
+#region structure formats
+        elif extension == ".pdb" or extension == ".pdb1" or extension == ".pdb2" or extension == ".pdb3" or extension == ".pdb4" or extension == ".pdb5":
+            icon = Icon.structure
+        elif extension == ".sd" or extension == ".sdf" or extension == ".mol" or extension == ".mol2":
+            icon = Icon.structure
+        elif extension == ".cif" or extension == ".mmcif" or extension == ".pdbx":
+            icon = Icon.structure
+        elif extension == ".smiles" or extension == ".smi":
+            icon = Icon.structure
+        elif extension == ".xyz" or extension == ".pqr" or extension == ".gro":
+            icon = Icon.structure
+        elif extension == ".moe" or extension == ".mae" or extension == ".pse":
+            icon = Icon.structure
+#endregion
+#region misc formats
+        elif extension == ".dcd" or extension == ".xtc" or extension == ".trr" or extension == ".psf":
+            icon = Icon.structure
+        elif extension == ".ccp4" or extension == ".dsn6":
+            icon = Icon.structure
+        elif extension == ".dx" or extension == ".map":
+            icon = Icon.structure
+        else:
+            return None
+#endregion
+
         item = self.item_prefab.clone()
         button = item.find_node("Button", True).get_content()
         button.text.value.set_all(entry.name)
@@ -88,6 +135,7 @@ class FileExplorer(nanome.PluginInstance):
         button.text.value.set_all(self.path_leaf(entry.name))
         button.text.size = .3
         button.text.ellipsis = True
+        button.icon.value.set_all(icon)
         return item
 
     def entry_pressed(self, button):
@@ -139,4 +187,6 @@ class FileExplorer(nanome.PluginInstance):
     def path_leaf(self, path):
         head, tail = ntpath.split(path)
         return tail or ntpath.basename(head)
+
+
 nanome.Plugin.setup(NAME, DESCRIPTION, CATEGORY, HAS_ADVANCED_OPTIONS, FileExplorer)

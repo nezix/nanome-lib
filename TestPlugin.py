@@ -10,6 +10,7 @@ import glob
 def get_class_names():
     modules = glob.glob(join(dirname(__file__), join("test_plugins", "*.py")))
     plugin_modules = [ basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]
+    default_params(sys.argv)
     if sys.argv[1].lower() == "all":
         del sys.argv[1]
         return plugin_modules
@@ -19,6 +20,16 @@ def get_class_names():
             class_names.append(sys.argv[1])
             del sys.argv[1]
         return class_names
+
+def default_params (args):
+    if "-a" not in args:
+        args.append("-a")
+        args.append("plugins.nanome.ai")
+    if "-p" not in args:
+        args.append("-p")
+        args.append("9999")
+    if ("-v") not in args:
+        args.append("-v")
 
 def launch_plugin(class_name, args):
     module_name = "test_plugins." + class_name
