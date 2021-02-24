@@ -1,12 +1,9 @@
-from nanome._internal._structure._io._mmcif.structure import structure
 import nanome
+from nanome.api.ui import Menu
+from nanome.api.ui import LayoutNode
 import os
 import tempfile
 import ntpath
-from nanome.api.ui import Menu
-from nanome.api.ui import LayoutNode
-from nanome.util.logs import Logs
-from nanome.util.file import FileError
 
 test_assets = os.getcwd() + ("/testing/test_assets")
 
@@ -46,10 +43,10 @@ class FileExplorer():
     def on_directory_pressed(self, entry):
         pass
 
-    def on_select_pressed(self):
+    def on_select_pressed(self, entry):
         pass
 
-    def on_quick_access(self, button):
+    def on_quick_access(self, name):
         pass
 
     def set_quick_access_list(self, names):
@@ -59,13 +56,13 @@ class FileExplorer():
             button = new_node.get_content()
             button.name = name
             button.text.value.set_all(name)
-            button.register_pressed_callback(self.on_quick_access)
+            button.register_pressed_callback(self.__quick_access_pressed)
             self.file_source_node.add_child(new_node)
 
     def set_working_directory(self, error, path):
         self.path_text.text_value = path
 
-    def set_children(self, error, files):
+    def set_directory_contents(self, error, files):
         if error != nanome.util.FileError.no_error:  # If API couldn't access directory, display error
             nanome.util.Logs.error("Directory request error:", str(error))
             return
@@ -74,6 +71,9 @@ class FileExplorer():
             item = self.__create_file_rep(file)
             if item != None:
                 self.grid.items.append(item)
+
+    def __quick_access_pressed(self, button):
+        self.on_quick_access(button.name)
 
     def __entry_pressed(self, button):
         to_update = []
