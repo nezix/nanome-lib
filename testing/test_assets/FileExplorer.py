@@ -41,7 +41,7 @@ class FileExplorer():
     def on_up_pressed (self):
         pass
 
-    def on_directory_pressed(self):
+    def on_directory_pressed(self, entry):
         pass
 
     def on_select_pressed(self):
@@ -59,8 +59,6 @@ class FileExplorer():
 
     def set_working_directory (self, error, path):
         self.path_text.text_value = path
-        if self.running:
-            self.update_content(self.path_text)
 
     def set_children(self, error, files):
         if error != nanome.util.FileError.no_error:  # If API couldn't access directory, display error
@@ -68,15 +66,13 @@ class FileExplorer():
             return
         self.grid.items = []
         for file in files:
-            item = self.create_file_rep(file)
+            item = self.__create_file_rep(file)
             if item != None:
                 self.grid.items.append(item)
-        if self.running:
-            self.update_content(self.grid)
 
-    def entry_pressed(self, button):
+    def __entry_pressed(self, button):
         if button.entry.is_directory:
-            self.files.cd(button.entry.name, self.directory_changed)
+            self.on_directory_pressed(button.entry)
             return
         to_update = []
         button.selected = True
@@ -89,13 +85,11 @@ class FileExplorer():
             self.selected_button = button
             to_update.append(self.selected_button)
 
-        self.save_button.unusable = self.selected_button == None
-        to_update.append(self.save_button)
         self.select_button.unusable = self.selected_button == None
         to_update.append(self.select_button)
-        self.update_content(to_update)
+        #self.update_content(to_update)
 
-    def create_file_rep(self, entry):
+    def __create_file_rep(self, entry):
         extension = os.path.splitext(entry.name)[1].lower()
         icon = self.__get_icon(extension)
         if (icon == None):
@@ -104,7 +98,7 @@ class FileExplorer():
         item = self.item_prefab.clone()
         button = item.find_node("Button", True).get_content()
         button.text.value.set_all(entry.name)
-        button.register_pressed_callback(self.entry_pressed)
+        button.register_pressed_callback(self.__entry_pressed)
         button.entry = entry
         button.text.value.set_all(self.__path_leaf(entry.name))
         button.text.size = .3
