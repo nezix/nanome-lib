@@ -17,12 +17,12 @@ test_assets = os.getcwd() + ("/testing/test_assets")
 
 
 class Icon():
-    up = os.path.expanduser("~/Desktop/PluginIcons/Up.png")
-    folder = os.path.expanduser("~/Desktop/PluginIcons/Folder.png")
-    image = os.path.expanduser("~/Desktop/PluginIcons/Image.png")
-    pdf = os.path.expanduser("~/Desktop/PluginIcons/PDF.png")
-    structure = os.path.expanduser("~/Desktop/PluginIcons/Structures.png")
-    workspace = os.path.expanduser("~/Desktop/PluginIcons/Workspace.png")
+    up = "test_assets/PluginIcons/Up.png"
+    folder = "test_assets/PluginIcons/Folder.png"
+    image = "test_assets/PluginIcons/Image.png"
+    pdf = "test_assets/PluginIcons/PDF.png"
+    structure = "test_assets/PluginIcons/Structures.png"
+    workspace = "test_assets/PluginIcons/Workspace.png"
 
 
 class FileExplorer(nanome.PluginInstance):
