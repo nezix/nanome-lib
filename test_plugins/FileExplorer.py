@@ -16,7 +16,6 @@ class Icon():
     structure = test_assets + "/PluginIcons/Structures.png"
     workspace = test_assets + "/PluginIcons/Workspace.png"
 
-
 class FileExplorer():
     def __init__(self):
         self.item_prefab = LayoutNode.io.from_json(test_assets + "/File.json")
@@ -158,16 +157,29 @@ class FileExplorer():
 
         if entry.is_directory:
             selection_button.register_pressed_callback(self.__directory_pressed)
-            # favorite_node.enabled = True #Disabling favorite behaviour for now
+            favorite_node.enabled = False #Disabling favorite behaviour for now
             date_and_size_node.enabled = False
         else:
             selection_button.register_pressed_callback(self.__entry_pressed)
-            # favorite_node.enabled = False
+            favorite_node.enabled = False
             date_and_size_node.enabled = True
-            date.text_value.set_all(entry.date_modified)
-            size.text_value.set_all(entry.size)
+            date.text_value = entry.date_modified
+            size.text_value = self.__format_size(entry.size)
         return item
 
+    def __format_size(self, size):
+        if (size < 1000):
+            return str(int(size)) + "B"
+        size = size/1000
+        if (size < 1000):
+            return str(int(size)) + "KB"
+        size = size/1000
+        if (size < 1000):
+            return str(int(size)) + "MB"
+        size = size/1000
+        if (size < 1000):
+            return str(int(size)) + "GB"
+    
     def __path_leaf(self, path):
         head, tail = ntpath.split(path)
         return tail or ntpath.basename(head)

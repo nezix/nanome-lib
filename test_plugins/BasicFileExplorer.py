@@ -19,9 +19,18 @@ class BasicFileExplorer(nanome.PluginInstance):
         self.FileExplorer.set_quick_access_list([])
 
         self.temp_dir = tempfile.mkdtemp()
+        self.quick_locations = [
+            ("Desktop", "~/Desktop"),
+            ("Documents", "~/Documents"),
+            ("Downloads", "~/Downloads"),
+            ("Pictures", "~/Pictures"),
+            ("Workspaces", "~/Documents/Nanome/Sessions"),
+            ("Recordings", "~/Documents/Nanome/Recordings"),
+            ]
 
     def on_run(self):
         self.files.cd(".", self.directory_changed)
+        self.__setup_quick_access()
         self.FileExplorer.open(self)
 
     def update(self):
@@ -56,6 +65,18 @@ class BasicFileExplorer(nanome.PluginInstance):
     def __path_leaf(self, path):
         head, tail = ntpath.split(path)
         return tail or ntpath.basename(head)
+
+    def __setup_quick_access(self):
+        location_count = len(self.quick_locations)
+        self.__ql_responses = 0
+        for location in self.quick_locations:
+            def filter_result(error, _):
+                if (error != nanome.util.FileError.no_error):
+                    self.quick_locations.remove(location)
+                self.__ql_responses += 1
+                if self.__ql_responses == location_count:
+                    self.FileExplorer.set_quick_access_list([n[0] for n in self.quick_locations])
+            self.files.ls(location[1], filter_result)
 
 
 NAME = "File Explorer"
