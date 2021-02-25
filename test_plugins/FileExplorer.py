@@ -17,10 +17,11 @@ class Icon():
     workspace = test_assets + "/PluginIcons/Workspace.png"
 
 class FileExplorer():
-    def __init__(self):
+    def __init__(self, title = "FileExplorer"):
         self.item_prefab = LayoutNode.io.from_json(test_assets + "/File.json")
         self.menu = Menu.io.from_json(test_assets + "/FileExplorer.json")
         self.menu.register_closed_callback(self.__on_close)
+        self.menu.title = title
 
         # Setup quick access panel
         self.quick_access_prefab = self.menu.root.find_node("QuickAccess1", True)
@@ -30,7 +31,7 @@ class FileExplorer():
         self.grid = self.menu.root.find_node("Grid", True).get_content()
         self.path_text = self.menu.root.find_node("BreadCrumbText", True).get_content()
         self.select_button = self.menu.root.find_node("SelectButton", True).get_content()
-        self.select_button.register_pressed_callback(self.on_select_pressed)
+        self.select_button.register_pressed_callback(self.__select_pressed)
         self.up_button = self.menu.root.find_node("Up", True).get_content()
         self.up_button.icon.value.set_all(Icon.up)
         self.up_button.register_pressed_callback(self.__up_pressed)
@@ -77,7 +78,6 @@ class FileExplorer():
             button.name = name
             button.text.value.set_all(name)
             button.register_pressed_callback(self.__quick_access_pressed)
-            button.disable_on_press = True
             self.file_source_node.add_child(new_node)
         self.file_source_node.add_child(padding)
         self.dirty_nodes.append(self.file_source_node)
@@ -105,6 +105,9 @@ class FileExplorer():
 
     def __up_pressed(self, button):
         self.on_up_pressed()
+
+    def __select_pressed(self, button):
+        self.on_select_pressed(self.selected_button.entry)
 
     def __entry_pressed(self, button):
         # deselecting a node
@@ -155,7 +158,7 @@ class FileExplorer():
         selection_button.entry = entry
 
         icon.file_path = image
-        text.text_value = self.__path_leaf(entry.name)
+        text.text_value = self.__format_file_name(entry.name)
 
         if entry.is_directory:
             selection_button.register_pressed_callback(self.__directory_pressed)
@@ -168,6 +171,12 @@ class FileExplorer():
             date.text_value = entry.date_modified
             size.text_value = self.__format_size(entry.size)
         return item
+
+    def __format_file_name(self, name):
+        name = self.__path_leaf(name)
+        if len(name) > 30:
+            return "..." + name[-27:]
+        return name
 
     def __format_size(self, size):
         if (size < 1000):
