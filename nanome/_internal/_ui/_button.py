@@ -66,11 +66,11 @@ class _Button(_UIBase):
             self._ellipsis = True
             self._bold = _Button._MultiStateVariable._create(True)
             self._color = _Button._MultiStateVariable._create(Color.White())
-            self._padding_top = 0
-            self._padding_bottom = 0
-            self._padding_left = 0
-            self._padding_right = 0
-            self._line_spacing = 0
+            self._padding_top = 0.0
+            self._padding_bottom = 0.0
+            self._padding_left = 0.0
+            self._padding_right = 0.0
+            self._line_spacing = 0.0
             self._vertical_align =  _Button.VertAlignOptions.Middle
             self._horizontal_align = _Button.HorizAlignOptions.Middle
 

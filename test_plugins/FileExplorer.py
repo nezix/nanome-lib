@@ -69,6 +69,7 @@ class FileExplorer():
                 self.dirty_nodes = []
 
     def set_quick_access_list(self, names):
+        padding = self.file_source_node.find_node("Padding", True)
         self.file_source_node.clear_children()
         for name in names:
             new_node = self.quick_access_prefab.clone()
@@ -78,6 +79,7 @@ class FileExplorer():
             button.register_pressed_callback(self.__quick_access_pressed)
             button.disable_on_press = True
             self.file_source_node.add_child(new_node)
+        self.file_source_node.add_child(padding)
         self.dirty_nodes.append(self.file_source_node)
 
     def set_working_directory(self, error, path):
