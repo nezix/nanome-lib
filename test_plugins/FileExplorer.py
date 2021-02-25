@@ -58,6 +58,7 @@ class FileExplorer():
         self.running = True
         self.dirty_content = []
         self.dirty_nodes = []
+        self.menu._enabled = True
         plugin.update_menu(self.menu)
 
     def update(self, plugin):
