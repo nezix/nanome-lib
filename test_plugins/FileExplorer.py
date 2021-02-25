@@ -1,192 +1,207 @@
-from nanome._internal._structure._io._mmcif.structure import structure
 import nanome
+from nanome.api.ui import Menu
+from nanome.api.ui import LayoutNode
 import os
 import tempfile
 import ntpath
-from nanome.api.ui import Menu
-from nanome.api.ui import LayoutNode
-from nanome.util.logs import Logs
-from nanome.util.file import FileError
-
-NAME = "File Explorer"
-DESCRIPTION = "Allows you to browse your files"
-CATEGORY = ""
-HAS_ADVANCED_OPTIONS = False
 
 test_assets = os.getcwd() + ("/testing/test_assets")
 
 
 class Icon():
-    up = "test_assets/PluginIcons/Up.png"
-    folder = "test_assets/PluginIcons/Folder.png"
-    image = "test_assets/PluginIcons/Image.png"
-    pdf = "test_assets/PluginIcons/PDF.png"
-    structure = "test_assets/PluginIcons/Structures.png"
-    workspace = "test_assets/PluginIcons/Workspace.png"
+    up = test_assets + "/PluginIcons/Up.png"
+    folder = test_assets + "/PluginIcons/Folder.png"
+    image = test_assets + "/PluginIcons/Image.png"
+    pdf = test_assets + "/PluginIcons/PDF.png"
+    structure = test_assets + "/PluginIcons/Structures.png"
+    workspace = test_assets + "/PluginIcons/Workspace.png"
 
 
-class FileExplorer(nanome.PluginInstance):
-
-    def start(self):
-        self.running = False
+class FileExplorer():
+    def __init__(self):
         self.item_prefab = LayoutNode.io.from_json(test_assets + "/File.json")
         self.menu = Menu.io.from_json(test_assets + "/FileExplorer.json")
+        self.menu.register_closed_callback(self.__on_close)
+
+        # Setup quick access panel
+        self.quick_access_prefab = self.menu.root.find_node("QuickAccess1", True)
+        self.file_source_node = self.quick_access_prefab.parent
+        self.file_source_node.remove_child(self.quick_access_prefab)
+
         self.grid = self.menu.root.find_node("Grid", True).get_content()
-        self.path_text = self.menu.root.find_node("path", True).get_content()
-        self.load_button = self.menu.root.find_node("LoadButton", True).get_content()
-        self.load_button.register_pressed_callback(self.load_pressed)
-        self.save_button = self.menu.root.find_node("SaveButton", True).get_content()
-        self.save_button.register_pressed_callback(self.save_pressed)
-        self.back_button = self.menu.root.find_node("back", True).get_content()
-        self.back_button.icon.value.set_all(Icon.up)
-        self.back_button.register_pressed_callback(self.back_pressed)
+        self.path_text = self.menu.root.find_node("BreadCrumbText", True).get_content()
+        self.select_button = self.menu.root.find_node("SelectButton", True).get_content()
+        self.select_button.register_pressed_callback(self.on_select_pressed)
+        self.up_button = self.menu.root.find_node("Up", True).get_content()
+        self.up_button.icon.value.set_all(Icon.up)
+        self.up_button.register_pressed_callback(self.__up_pressed)
         self.selected_button = None
-        self.fetch_children()
-        # self.fetch_wd()
-        self.files.cd("~", self.directory_changed)
         self.temp_dir = tempfile.mkdtemp()
-        # self.test_path = "C:\\Users\\ETHANV~1\\AppData\\Local\\Temp\\tmpuzepx_cf\\file.jpg"
-        # self.test_path1 = "C:\\Users\\ETHANV~1\\AppData\\Local\\Temp\\tmpuzepx_cf\\1.jpg"
-        # self.test_path2 = "C:\\Users\\ETHANV~1\\AppData\\Local\\Temp\\tmpuzepx_cf\\2.jpg"
-        # self.test_path3 = "C:\\Users\\ETHANV~1\\AppData\\Local\\Temp\\tmpuzepx_cf\\3.jpg"
-        # self.files.cp(self.test_path, self.test_path1, self.cp_done)
-        # self.files.put(self.test_path, self.test_path2, self.put_done)
-        # self.files.mv(self.test_path, self.test_path3, self.mv_done)
 
-    def cp_done(self, *args):
-        Logs.debug("cp done")
+        self.dirty_content = []
+        self.dirty_nodes = []
+        self.running = False
 
-    def put_done(self, *args):
-        Logs.debug("put done")
+    def on_up_pressed(self):
+        pass
 
-    def mv_done(self, *args):
-        Logs.debug("mv done")
+    def on_directory_pressed(self, entry):
+        pass
 
-    def on_run(self):
+    def on_select_pressed(self, entry):
+        pass
+
+    def on_quick_access(self, name):
+        pass
+
+    def open(self, plugin):
         self.running = True
-        self.update_menu(self.menu)
+        self.dirty_content = []
+        self.dirty_nodes = []
+        plugin.update_menu(self.menu)
 
-    def fetch_wd(self):
-        self.wd = "."
-        self.files.pwd(self.__set_dir)
+    def update(self, plugin):
+        if (self.running):
+            if len(self.dirty_content) > 0:
+                plugin.update_content(self.dirty_content)
+                self.dirty_content = []
+            if len(self.dirty_nodes) > 0:
+                plugin.update_node(self.dirty_nodes)
+                self.dirty_nodes = []
 
-    def __set_dir(self, error, wd):
-        self.wd = wd
-        self.path_text.text_value = wd
-        if self.running:
-            self.update_content(self.path_text)
+    def set_quick_access_list(self, names):
+        self.file_source_node.clear_children()
+        for name in names:
+            new_node = self.quick_access_prefab.clone()
+            button = new_node.get_content()
+            button.name = name
+            button.text.value.set_all(name)
+            button.register_pressed_callback(self.__quick_access_pressed)
+            button.disable_on_press = True
+            self.file_source_node.add_child(new_node)
+        self.dirty_nodes.append(self.file_source_node)
 
-    def fetch_children(self):
-        self.files.ls(".", self.__set_children)
+    def set_working_directory(self, error, path):
+        self.path_text.text_value = path
+        self.dirty_content.append(self.path_text)
 
-    def __set_children(self, error, files):
+    def set_directory_contents(self, error, files):
         if error != nanome.util.FileError.no_error:  # If API couldn't access directory, display error
             nanome.util.Logs.error("Directory request error:", str(error))
             return
         self.grid.items = []
         for file in files:
-            item = self.create_file_rep(file)
+            item = self.__create_file_rep(file)
             if item != None:
                 self.grid.items.append(item)
-        if self.running:
-            self.update_content(self.grid)
+        self.dirty_content.append(self.grid)
 
-    def create_file_rep(self, entry):
-        extension = os.path.splitext(entry.name)[1].lower()
-        icon = ""
-        if extension == "":
-            icon = Icon.folder
-        elif extension == ".pdf":
-            icon = Icon.pdf
-        elif extension == ".jpeg" or extension == ".jpg" or extension == ".png":
-            icon = Icon.image
-        elif extension == ".nanome":
-            icon = Icon.workspace
-#region structure formats
-        elif extension == ".pdb" or extension == ".pdb1" or extension == ".pdb2" or extension == ".pdb3" or extension == ".pdb4" or extension == ".pdb5":
-            icon = Icon.structure
-        elif extension == ".sd" or extension == ".sdf" or extension == ".mol" or extension == ".mol2":
-            icon = Icon.structure
-        elif extension == ".cif" or extension == ".mmcif" or extension == ".pdbx":
-            icon = Icon.structure
-        elif extension == ".smiles" or extension == ".smi":
-            icon = Icon.structure
-        elif extension == ".xyz" or extension == ".pqr" or extension == ".gro":
-            icon = Icon.structure
-        elif extension == ".moe" or extension == ".mae" or extension == ".pse":
-            icon = Icon.structure
-#endregion
-#region misc formats
-        elif extension == ".dcd" or extension == ".xtc" or extension == ".trr" or extension == ".psf":
-            icon = Icon.structure
-        elif extension == ".ccp4" or extension == ".dsn6":
-            icon = Icon.structure
-        elif extension == ".dx" or extension == ".map":
-            icon = Icon.structure
-        else:
-            return None
-#endregion
+    def __on_close(self, menu):
+        self.running = False
 
-        item = self.item_prefab.clone()
-        button = item.find_node("Button", True).get_content()
-        button.text.value.set_all(entry.name)
-        button.register_pressed_callback(self.entry_pressed)
-        button.entry = entry
-        button.text.value.set_all(self.path_leaf(entry.name))
-        button.text.size = .3
-        button.text.ellipsis = True
-        button.icon.value.set_all(icon)
-        return item
+    def __quick_access_pressed(self, button):
+        self.on_quick_access(button.name)
 
-    def entry_pressed(self, button):
-        if button.entry.is_directory:
-            self.files.cd(button.entry.name, self.directory_changed)
-            return
-        to_update = []
-        button.selected = True
-        if self.selected_button is not None:
-            self.selected_button.selected = False
-            to_update.append(self.selected_button)
+    def __up_pressed(self, button):
+        self.on_up_pressed()
+
+    def __entry_pressed(self, button):
+        # deselecting a node
         if self.selected_button == button:
             self.selected_button = None
+            button.selected = False
+            self.dirty_content.append(button)
+            self.select_button.unusable = True
+            self.dirty_content.append(self.select_button)
+        # selecting a node
         else:
+            #deselecting the old node
+            if self.selected_button is not None:
+                self.selected_button.selected = False
+                self.dirty_content.append(self.selected_button)
+            else:
+                self.select_button.unusable = False
+                self.dirty_content.append(self.select_button)
+            button.selected = True
+            self.dirty_content.append(button)
             self.selected_button = button
-            to_update.append(self.selected_button)
 
-        self.save_button.unusable = self.selected_button == None
-        to_update.append(self.save_button)
-        self.load_button.unusable = self.selected_button == None
-        to_update.append(self.load_button)
-        self.update_content(to_update)
+    def __directory_pressed(self, button):
+        self.on_directory_pressed(button.entry)
 
-    def load_pressed(self, button):
-        entry = self.selected_button.entry
-        if not entry.is_directory:
-            self.files.get(entry.name, os.path.join(self.temp_dir, str(self.path_leaf(entry.name))), self.file_fetched)
+    def __get_prefab_parts(self, prefab):
+        selection_button = prefab.find_node("Selection", True).get_content()
+        icon = prefab.find_node("Icon", True).get_content()
+        text = prefab.find_node("Name", True).get_content()
 
-    def file_fetched(self, error, path):
-        if error == nanome.util.FileError.no_error:
-            Logs.debug(path)
-            self.send_files_to_load(path)
+        favorite_node = prefab.find_node("Favorite", True)
+        favorite_button = favorite_node.get_content()
+
+        date_and_size_node = prefab.find_node("DateAndSize", True)
+        date = prefab.find_node("Date", True).get_content()
+        size = prefab.find_node("Size", True).get_content()
+        return selection_button, icon, text, favorite_node, favorite_button, date_and_size_node, date, size
+
+    def __create_file_rep(self, entry):
+        extension = os.path.splitext(entry.name)[1].lower()
+        image = self.__get_icon(extension)
+        if (image == None):
+            return None
+
+        item = self.item_prefab.clone()
+        selection_button, icon, text, favorite_node, favorite_button, date_and_size_node, date, size = self.__get_prefab_parts(item)
+
+        selection_button.entry = entry
+
+        icon.file_path = image
+        text.text_value = self.__path_leaf(entry.name)
+
+        if entry.is_directory:
+            selection_button.register_pressed_callback(self.__directory_pressed)
+            # favorite_node.enabled = True #Disabling favorite behaviour for now
+            date_and_size_node.enabled = False
         else:
-            Logs.debug(error)
+            selection_button.register_pressed_callback(self.__entry_pressed)
+            # favorite_node.enabled = False
+            date_and_size_node.enabled = True
+            date.text_value.set_all(entry.date_modified)
+            size.text_value.set_all(entry.size)
+        return item
 
-    def save_pressed(self, button):
-        pass
-
-    def back_pressed(self, button):
-        self.files.cd("..", self.directory_changed)
-
-    def directory_changed(self, *args):
-        if FileError.no_error == args[0]:
-            self.fetch_wd()
-            self.fetch_children()
-        else:
-            Logs.error(args[0])
-
-    def path_leaf(self, path):
+    def __path_leaf(self, path):
         head, tail = ntpath.split(path)
         return tail or ntpath.basename(head)
 
-
-nanome.Plugin.setup(NAME, DESCRIPTION, CATEGORY, HAS_ADVANCED_OPTIONS, FileExplorer)
+    def __get_icon(self, extension):
+        if extension == "":
+            return Icon.folder
+        elif extension == ".pdf":
+            return Icon.pdf
+        elif extension == ".jpeg" or extension == ".jpg" or extension == ".png":
+            return Icon.image
+        elif extension == ".nanome":
+            return Icon.workspace
+# region structure formats
+        elif extension == ".pdb" or extension == ".pdb1" or extension == ".pdb2" or extension == ".pdb3" or extension == ".pdb4" or extension == ".pdb5":
+            return Icon.structure
+        elif extension == ".sd" or extension == ".sdf" or extension == ".mol" or extension == ".mol2":
+            return Icon.structure
+        elif extension == ".cif" or extension == ".mmcif" or extension == ".pdbx":
+            return Icon.structure
+        elif extension == ".smiles" or extension == ".smi":
+            return Icon.structure
+        elif extension == ".xyz" or extension == ".pqr" or extension == ".gro":
+            return Icon.structure
+        elif extension == ".moe" or extension == ".mae" or extension == ".pse":
+            return Icon.structure
+# endregion
+# region misc formats
+        elif extension == ".dcd" or extension == ".xtc" or extension == ".trr" or extension == ".psf":
+            return Icon.structure
+        elif extension == ".ccp4" or extension == ".dsn6":
+            return Icon.structure
+        elif extension == ".dx" or extension == ".map":
+            return Icon.structure
+        else:
+            return None
+# endregion

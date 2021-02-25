@@ -7,10 +7,10 @@ from nanome.api.ui import Menu
 from nanome.api.ui import LayoutNode
 from nanome.util.logs import Logs
 from nanome.util.file import FileError
-from . import FileExplorer
+from .FileExplorer import FileExplorer
 
 class BasicFileExplorer(nanome.PluginInstance):
-    def __init__(self):
+    def start(self):
         self.FileExplorer = FileExplorer()
         self.FileExplorer.on_up_pressed = self.on_up_pressed
         self.FileExplorer.on_directory_pressed = self.on_directory_pressed
@@ -20,6 +20,12 @@ class BasicFileExplorer(nanome.PluginInstance):
 
         self.temp_dir = tempfile.mkdtemp()
 
+    def on_run(self):
+        self.files.cd(".", self.directory_changed)
+        self.FileExplorer.open(self)
+
+    def update(self):
+        self.FileExplorer.update(self)
 
     def on_up_pressed(self):
         self.files.cd("..", self.directory_changed)
@@ -50,3 +56,10 @@ class BasicFileExplorer(nanome.PluginInstance):
     def __path_leaf(self, path):
         head, tail = ntpath.split(path)
         return tail or ntpath.basename(head)
+
+
+NAME = "File Explorer"
+DESCRIPTION = "Allows you to browse your files"
+CATEGORY = ""
+HAS_ADVANCED_OPTIONS = False
+nanome.Plugin.setup(NAME, DESCRIPTION, CATEGORY, HAS_ADVANCED_OPTIONS, BasicFileExplorer)
