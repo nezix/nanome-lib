@@ -1,5 +1,5 @@
 from . import _UIBase
-from nanome.util import Vector3, Color
+from nanome.util import Vector3, Color, Logs
 import nanome
 import copy
 
@@ -29,18 +29,21 @@ class _Button(_UIBase):
         self._tooltip = _Button._ButtonTooltip._create()
         #API
         self._pressed_callback = lambda _: None
-        self._hover_callback = lambda _, __: None
+        self._hover_callback = None
 
     def _on_button_pressed(self):
         self._pressed_callback(self)
 
     def _on_button_hover(self, state):
-        self._hover_callback(self, state)
+        if self._hover_callback != None:
+            self._hover_callback(self, state)
 
     def _register_pressed_callback(self, func):
         self._pressed_callback = func
 
     def _register_hover_callback(self, func):
+        if func == None and self._hover_callback == None: # Low hanging filter but there may be others
+            return
         try:
             nanome._internal._network._ProcessNetwork._instance._send(
                 nanome._internal._network._commands._callbacks._Messages.hook_ui_callback,
