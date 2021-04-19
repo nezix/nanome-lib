@@ -25,7 +25,7 @@ class Complex(_Complex, Base):
         molecule.index = -1
         self._remove_molecule(molecule)
 
-    #region Generators
+    # region Generators
     @property
     def molecules(self):
         for molecule in self._molecules:
@@ -54,12 +54,13 @@ class Complex(_Complex, Base):
         for residue in self.residues:
             for bond in residue.bonds:
                 yield bond
-    #endregion
+    # endregion
 
-    #region all fields
+    # region all fields
     @property
     def boxed(self):
         return self._boxed
+
     @boxed.setter
     def boxed(self, value):
         self._boxed = value
@@ -67,6 +68,7 @@ class Complex(_Complex, Base):
     @property
     def locked(self):
         return self._locked
+
     @locked.setter
     def locked(self, value):
         self._locked = value
@@ -76,6 +78,7 @@ class Complex(_Complex, Base):
     @property
     def visible(self):
         return self._visible
+
     @visible.setter
     def visible(self, value):
         self._visible = value
@@ -83,6 +86,7 @@ class Complex(_Complex, Base):
     @property
     def computing(self):
         return self._computing
+
     @computing.setter
     def computing(self, value):
         self._computing = value
@@ -92,7 +96,7 @@ class Complex(_Complex, Base):
         return self._current_frame
 
     def set_current_frame(self, value):
-        value = max(0, min(value, len(self._molecules)-1))
+        value = max(0, min(value, len(self._molecules) - 1))
         self._current_frame = value
 
     # returns true if the complex is selected on nanome.
@@ -115,6 +119,7 @@ class Complex(_Complex, Base):
     @property
     def box_label(self):
         return self._box_label
+
     @box_label.setter
     def box_label(self, value):
         self._box_label = value
@@ -122,6 +127,7 @@ class Complex(_Complex, Base):
     @property
     def name(self):
         return self._name
+
     @name.setter
     def name(self, value):
         if type(value) is not str:
@@ -131,6 +137,7 @@ class Complex(_Complex, Base):
     @property
     def index_tag(self):
         return self._index_tag
+
     @index_tag.setter
     def index_tag(self, value):
         self._index_tag = value
@@ -138,6 +145,7 @@ class Complex(_Complex, Base):
     @property
     def split_tag(self):
         return self._split_tag
+
     @split_tag.setter
     def split_tag(self, value):
         self._split_tag = value
@@ -151,7 +159,7 @@ class Complex(_Complex, Base):
             fullname = fullname + " {" + str(self._index_tag)
             has_tag = True
 
-        if self._split_tag != None and len(self._split_tag) > 0:
+        if self._split_tag is not None and len(self._split_tag) > 0:
             if has_tag:
                 fullname = fullname + "-" + self._split_tag
             else:
@@ -162,6 +170,7 @@ class Complex(_Complex, Base):
             fullname = fullname + "}"
 
         return fullname
+
     @full_name.setter
     def full_name(self, value):
         self._name = value
@@ -171,6 +180,7 @@ class Complex(_Complex, Base):
     @property
     def position(self):
         return self._position
+
     @position.setter
     def position(self, value):
         self._position = value
@@ -178,6 +188,7 @@ class Complex(_Complex, Base):
     @property
     def rotation(self):
         return self._rotation
+
     @rotation.setter
     def rotation(self, value):
         self._rotation = value
@@ -187,9 +198,9 @@ class Complex(_Complex, Base):
 
     def get_complex_to_workspace_matrix(self):
         return Matrix.compose_transformation_matrix(self._position, self._rotation)
-    #endregion
+    # endregion
 
-    def convert_to_conformers(self, force_conformers = None):
+    def convert_to_conformers(self, force_conformers=None):
         return self._convert_to_conformers(force_conformers)
 
     def convert_to_frames(self):
@@ -211,7 +222,7 @@ class Complex(_Complex, Base):
             complex.position = target_complex.position.get_copy()
             complex.rotation = target_complex.rotation.get_copy()
 
-    #region depricated
+    # region depricated
     @current_frame.setter
     @Logs.deprecated()
     def current_frame(self, value):
@@ -239,6 +250,7 @@ class Complex(_Complex, Base):
         @property
         def boxed(self):
             return self.parent._boxed
+
         @boxed.setter
         def boxed(self, value):
             self.parent.boxed = value
@@ -246,6 +258,7 @@ class Complex(_Complex, Base):
         @property
         def locked(self):
             return self.parent.locked
+
         @locked.setter
         def locked(self, value):
             self.parent.locked = value
@@ -255,6 +268,7 @@ class Complex(_Complex, Base):
         @property
         def visible(self):
             return self.parent.visible
+
         @visible.setter
         def visible(self, value):
             self.parent.visible = value
@@ -262,6 +276,7 @@ class Complex(_Complex, Base):
         @property
         def computing(self):
             return self.parent.computing
+
         @computing.setter
         def computing(self, value):
             self.parent.computing = value
@@ -269,6 +284,7 @@ class Complex(_Complex, Base):
         @property
         def current_frame(self):
             return self.parent.current_frame
+
         @current_frame.setter
         def current_frame(self, value):
             self.parent.current_frame = value
@@ -283,6 +299,7 @@ class Complex(_Complex, Base):
         @property
         def box_label(self):
             return self._box_label
+
         @box_label.setter
         def box_label(self, value):
             self._box_label = value
@@ -294,6 +311,7 @@ class Complex(_Complex, Base):
         @property
         def name(self):
             return self.parent.name
+
         @name.setter
         def name(self, value):
             self.parent.name = value
@@ -301,6 +319,7 @@ class Complex(_Complex, Base):
         @property
         def index_tag(self):
             return self.parent.index_tag
+
         @index_tag.setter
         def index_tag(self, value):
             self.parent.index_tag = value
@@ -308,6 +327,7 @@ class Complex(_Complex, Base):
         @property
         def split_tag(self):
             return self.parent.split_tag
+
         @split_tag.setter
         def split_tag(self, value):
             self.parent.split_tag = value
@@ -319,6 +339,7 @@ class Complex(_Complex, Base):
         @property
         def position(self):
             return self.parent.position
+
         @position.setter
         def position(self, value):
             self.parent.position = value
@@ -326,6 +347,7 @@ class Complex(_Complex, Base):
         @property
         def rotation(self):
             return self.parent.rotation
+
         @rotation.setter
         def rotation(self, value):
             self.parent.rotation = value
@@ -346,6 +368,7 @@ class Complex(_Complex, Base):
             result = self.parent.get_workspace_to_complex_matrix()
             result = result.get_inverse()
             return result
-    #endregion
+
+    # endregion
 Complex.io._setup_addon(Complex)
 _Complex._create = Complex

@@ -2,6 +2,7 @@ from nanome._internal._structure._chain import _Chain
 from nanome.util import Logs
 from . import Base
 
+
 class Chain(_Chain, Base):
     def __init__(self):
         super(Chain, self).__init__()
@@ -15,7 +16,7 @@ class Chain(_Chain, Base):
         residue.index = -1
         self._remove_residue(residue)
 
-    #region Generators:
+    # region Generators:
     @property
     def residues(self):
         for residue in self._residues:
@@ -32,9 +33,9 @@ class Chain(_Chain, Base):
         for residue in self.residues:
             for bond in residue.bonds:
                 yield bond
-    #endregion
+    # endregion
 
-    #region connections
+    # region connections
     @property
     def molecule(self):
         return self._molecule
@@ -42,20 +43,21 @@ class Chain(_Chain, Base):
     @property
     def complex(self):
         return self._complex
-    #endregion
+    # endregion
 
-    #region all fields
+    # region all fields
     @property
     def name(self):
         return self._name
+
     @name.setter
     def name(self, value):
         if type(value) is not str:
             value = str(value)
         self._name = value
-    #endregion
+    # endregion
 
-    #region deprecated
+    # region deprecated
     @property
     @Logs.deprecated()
     def molecular(self):
@@ -68,8 +70,10 @@ class Chain(_Chain, Base):
         @property
         def name(self):
             return self.parent.name
+
         @name.setter
         def name(self, value):
             self.parent.name = value
-    #endregion
+
+    # endregion
 _Chain._create = Chain
