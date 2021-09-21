@@ -231,6 +231,7 @@ add_message(CommandCallbacks._Messages.controller_transforms_request, CommandSer
 # Shape
 add_message(CommandCallbacks._Messages.set_shape, CommandSerializers._SetShape())
 add_message(CommandCallbacks._Messages.delete_shape, CommandSerializers._DeleteShape())
+add_message(CommandCallbacks._Messages.representations_request, CommandSerializers._RequestRepresentations())
 
 # others
 add_message(CommandCallbacks._Messages.open_url, CommandSerializers._OpenURL())

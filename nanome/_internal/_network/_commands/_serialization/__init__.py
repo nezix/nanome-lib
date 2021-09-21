@@ -30,6 +30,7 @@ from ._macro import _StopMacro
 
 from ._shapes import _DeleteShape
 from ._shapes import _SetShape
+from ._shapes import _RequestRepresentations
 
 from ._stream import _CreateStream
 from ._stream import _CreateStreamResult

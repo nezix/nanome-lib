@@ -107,6 +107,15 @@ class PluginInstance(_PluginInstance):
         id = self._network._send(_Messages.complex_list_request, None, expects_response)
         return self._save_callback(id, callback)
 
+    def request_representations(self, callback=None):
+        """
+        | Request the representations of all complexes in the workspace
+        kwarg callback: Callable[[List[Shape]], None]
+        """
+        expects_response = callback is not None or self.is_async
+        id = self._network._send(_Messages.representations_request, None, expects_response)
+        return self._save_callback(id, callback)
+
     def request_complexes(self, id_list, callback=None):
         """
         | Requests a list of complexes by their indices
