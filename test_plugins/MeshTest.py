@@ -1,10 +1,6 @@
-import sys
-
-sys.path.insert(0, "D:/Dev/nanome-lib-fork/")
-
 from nanome.util.vector3 import Vector3
 import nanome
-import nanome.api.shapes as shapes
+from nanome.api import shapes
 from nanome.util import Logs
 
 import open3d as o3d
@@ -30,16 +26,16 @@ class MeshLoadingTest(nanome.PluginInstance):
         mesh = shapes.Mesh()
         mesh.uv = []
 
-        filename = "objs/bananome.obj"
-        image_path = "objs/bananome.png"
+        filename = "test_plugins/objs/bananome.obj"
+        image_path = "test_plugins/objs/bananome.png"
         img = o3d.io.read_image(image_path)
 
         #Read mesh
         o3dmesh = o3d.io.read_triangle_mesh(filename)
         #Center it
         o3dmesh.translate(-o3dmesh.get_center())
-        #Scale it 10 times
-        o3dmesh.scale(10.0, o3dmesh.get_center())
+        #Scale it 50 times
+        o3dmesh.scale(50.0, o3dmesh.get_center())
 
         #Compute normals if needed
         if not o3dmesh.has_vertex_normals():            
