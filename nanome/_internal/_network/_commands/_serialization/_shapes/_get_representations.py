@@ -1,9 +1,11 @@
-from nanome._internal._util._serializers import _ArraySerializer, _LongSerializer
+from nanome._internal._util._serializers import _ArraySerializer, _LongSerializer, _TypeSerializer
+from nanome._internal._shapes._serialization import _MeshSerializer
 
-from nanome._internal._util._serializers import _TypeSerializer
 
 class _RequestRepresentations(_TypeSerializer):
     def __init__(self):
+        self.array_serializer = _ArraySerializer()
+        self.array_serializer.set_type(_MeshSerializer())
         pass
 
     def version(self):
@@ -13,7 +15,7 @@ class _RequestRepresentations(_TypeSerializer):
         return "RequestRepresentations"
 
     def serialize(self, version, value, context):
-        pass
+        raise NotImplementedError
 
     def deserialize(self, version, context):
         return None

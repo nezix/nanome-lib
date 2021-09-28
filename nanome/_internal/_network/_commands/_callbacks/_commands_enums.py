@@ -91,6 +91,7 @@ class _Commands(_CommandEnum):
     add_volume_done = auto()
     load_file_done = auto()
     integration = auto()
+    representations_response = auto()
 
 # /!\ /!\ /!\
 # Values names are really important here, as they are hashed, and need to match Nanome

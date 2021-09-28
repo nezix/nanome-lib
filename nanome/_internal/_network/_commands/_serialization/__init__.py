@@ -81,6 +81,7 @@ from ._workspace import _UpdateStructures
 from ._workspace import _UpdateStructuresDeepDone
 from ._workspace import _UpdateWorkspace
 from ._workspace import _RequestSubstructure
+from ._workspace import _ReceiveRepresentations
 
 from ._load_file import _LoadFile
 from ._load_file_done import _LoadFileDone

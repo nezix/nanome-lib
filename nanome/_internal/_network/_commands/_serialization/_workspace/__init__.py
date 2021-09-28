@@ -19,3 +19,4 @@ from ._update_structures_deep_done import _UpdateStructuresDeepDone
 from ._update_structures import _UpdateStructures
 from ._update_workspace import _UpdateWorkspace
 from ._request_substructure import _RequestSubstructure
+from ._receive_representations import _ReceiveRepresentations
