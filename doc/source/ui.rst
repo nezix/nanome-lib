@@ -42,10 +42,10 @@ You create your menu, export it as JSON, and import it to your plugin.
 Download
 ========
 
-- `Windows <https://nanome.s3-us-west-1.amazonaws.com/installers/StackStudio/StackStudio_v5.2_Windows.zip>`_ 
-- `Mac <https://nanome.s3-us-west-1.amazonaws.com/installers/StackStudio/StackStudio_v0.5_Mac.zip>`_
+- `Windows <https://nanome.s3.us-west-1.amazonaws.com/installers/StackStudio/StackStudio_v0.54_Windows.zip>`_
+- `Mac <https://nanome.s3.us-west-1.amazonaws.com/installers/StackStudio/StackStudio_v0.54_Mac.zip>`_
 
-.. image:: stackstudio.png
+.. image:: assets/stackstudio.png
   :width: 800
   :alt: stackstudio
 
@@ -71,7 +71,7 @@ Keyboard Shortcuts
 - **ctrl o** - Select JSON File to import
 - **c** - quick add content to selected node
 - **n** - create child node
-- **delete / backspace** - delete selected node 
+- **delete / backspace** - delete selected node
 
 
 ******************
@@ -80,7 +80,7 @@ Z-fighting problem
 
 A known problem, called z-fighting, is the following:
 
-.. image:: z-fighting.png
+.. image:: assets/z-fighting.png
   :width: 400
   :alt: z-fighting
 
@@ -99,7 +99,7 @@ Importing a Menu from JSON
 
  We've found over time that creating a wrapper class around the ``Menu`` class is a good idea.
 
- The wrapper class can hold attributes referencing UI elements, callback functions, 
+ The wrapper class can hold attributes referencing UI elements, callback functions,
 
 .. code-block:: python
 
@@ -144,7 +144,7 @@ Importing a Menu from JSON
 
   class HelloNanomePlugin(nanome.PluginInstance):
     """Render an example menu that has a clickable button."""
-      
+
     def start(self):
       self.menu = ExampleMenu(self)
 

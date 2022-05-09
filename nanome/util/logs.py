@@ -1,10 +1,9 @@
-import sys
 import functools
+import inspect
+import logging
+import sys
+
 from .enum import IntEnum, auto
-if sys.version_info >= (3, 0):
-    from ._logs_3 import _print
-else:
-    from ._logs_2 import _print
 
 
 class Logs(object):
@@ -12,99 +11,77 @@ class Logs(object):
     | Allows for easy message logging without buffer issues.
     | Possible log types are Debug, Warning, and Error.
     """
-    class _LogType(IntEnum):
+    class LogType(IntEnum):
         debug = auto()
         warning = auto()
         error = auto()
-
-    _is_windows_cmd = False
-    _print_type = {
-        'debug': {'color': '\x1b[0m', 'msg': ''},
-        'warning': {'color': '\x1b[33m', 'msg': 'Warning: '},
-        'error': {'color': '\x1b[91m', 'msg': 'Error: '}
-    }
-    _closing = '\x1b[0m'
-    __verbose = None
-    __pipe = None
+        info = auto()
 
     @classmethod
-    def _set_verbose(cls, value):
-        cls.__verbose = value
-
-    @classmethod
-    def _set_pipe(cls, value):
-        cls.__pipe = value
-
-    @classmethod
-    def _is_verbose(cls):
-        return cls.__verbose
-
-    @classmethod
-    def _print(cls, col_type, *args):
-        _print(cls, col_type, args)
-        arr = []
-        for arg in args:
-            arr.append(str(arg))
-        msg = col_type['msg'] + ' '.join(arr)
-        if cls.__pipe is not None:
-            from nanome._internal._util import _DataType, _ProcData
-            to_send = _ProcData()
-            to_send._type = _DataType.log
-            to_send._data = msg
-            cls.__pipe.send(to_send)
-        else:
-            from nanome._internal._process import _LogsManager
-            _LogsManager._received_request(msg)
-
-    @classmethod
-    def error(cls, *args):
+    def error(cls, *args, **kwargs):
         """
         | Prints an error
 
         :param args: Variable length argument list
         :type args: Anything printable
+
+        :param kwargs: Keyword arguments to pass to python logging module.
+        For options, see https://github.com/python/cpython/blob/main/Lib/logging/__init__.py#L1604
         """
-        cls._print(cls._print_type['error'], *args)
+        module = cls.caller_name()
+        logger = logging.getLogger(module)
+        msg = ' '.join(map(str, args))
+        use_exc_info = sys.exc_info()[0] is not None
+        logger.error(msg, exc_info=use_exc_info, **kwargs)
 
     @classmethod
-    def warning(cls, *args):
+    def warning(cls, *args, **kwargs):
         """
         | Prints a warning
 
         :param args: Variable length argument list
         :type args: Anything printable
+
+        :param kwargs: Keyword arguments to pass to python logging module.
+        For options, see https://github.com/python/cpython/blob/main/Lib/logging/__init__.py#L1604
         """
-        cls._print(cls._print_type['warning'], *args)
+        module = cls.caller_name()
+        logger = logging.getLogger(module)
+        msg = ' '.join(map(str, args))
+        logger.warning(msg, **kwargs)
 
     @classmethod
-    def message(cls, *args):
+    def message(cls, *args, **kwargs):
         """
         | Prints a message
 
         :param args: Variable length argument list
         :type args: Anything printable
+
+        :param kwargs: Keyword arguments to pass to python logging module.
+        For options, see https://github.com/python/cpython/blob/main/Lib/logging/__init__.py#L1604
         """
-        cls._print(cls._print_type['debug'], *args)
+        module = cls.caller_name()
+        logger = logging.getLogger(module)
+        msg = ' '.join(map(str, args))
+        logger.info(msg, **kwargs)
 
     @classmethod
-    def debug(cls, *args):
+    def debug(cls, *args, **kwargs):
         """
         | Prints a debug message
         | Prints only if plugin started in verbose mode (with -v argument)
 
         :param args: Variable length argument list
         :type args: Anything printable
-        """
-        if cls.__verbose is None:
-            Logs.warning("Debug used before plugin start.")
-            cls._print(cls._print_type['debug'], *args)
-        elif cls.__verbose is True:
-            cls._print(cls._print_type['debug'], *args)
 
-    @classmethod
-    def _init(cls):
-        if sys.platform == 'win32' and sys.stdout.isatty():
-            cls._is_windows_cmd = True
+        :param kwargs: Keyword arguments to pass to python logging module.
+        For options, see https://github.com/python/cpython/blob/main/Lib/logging/__init__.py#L1604
+        """
+        module = cls.caller_name()
+        logger = logging.getLogger(module)
+        msg = ' '.join(map(str, args))
+        logger.debug(msg, **kwargs)
 
     @staticmethod
     def deprecated(new_func=None, msg=""):
@@ -123,5 +100,41 @@ class Logs(object):
             return wrapper
         return deprecated_decorator
 
+    @staticmethod
+    def caller_name(skip=2):
+        """Get a name of a caller in the format module.class.method
 
-Logs._init()
+        `skip` specifies how many levels of stack to skip while getting caller
+        name. skip=1 means "who calls me", skip=2 "who calls my caller" etc.
+
+        An empty string is returned if skipped levels exceed stack height
+
+        https://stackoverflow.com/questions/2654113/how-to-get-the-callers-method-name-in-the-called-method
+        """
+        stack = inspect.stack()
+        start = 0 + skip
+        if len(stack) < start + 1:
+            return ''
+        parentframe = stack[start][0]
+
+        name = []
+        module = inspect.getmodule(parentframe)
+        # `modname` can be None when frame is executed directly in console
+        # TODO(techtonik): consider using __main__
+        if module:
+            name.append(module.__name__)
+        # detect classname
+        if 'self' in parentframe.f_locals:
+            # I don't know any way to detect call from the object method
+            # XXX: there seems to be no way to detect static method call - it will
+            #      be just a function call
+            name.append(parentframe.f_locals['self'].__class__.__name__)
+        codename = parentframe.f_code.co_name
+        if codename != '<module>':  # top level usually
+            name.append(codename)  # function or a method
+
+        # Avoid circular refs and frame leaks
+        #  https://docs.python.org/2.7/library/inspect.html#the-interpreter-stack
+        del parentframe, stack
+
+        return ".".join(name)

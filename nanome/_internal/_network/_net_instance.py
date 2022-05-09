@@ -1,13 +1,11 @@
 from . import _Data
 from . import _Packet
-from nanome.util import Logs, ImportUtils
+from nanome.util import Logs
 
 import socket
 import ssl
-import sys
 import errno
 import time
-import traceback
 
 
 class _NetInstance(object):
@@ -52,18 +50,19 @@ class _NetInstance(object):
                     return
                 total_sent += sent
                 pack = pack[sent:]
-            except ConnectionResetError:
-                Logs.error("Connection has been forcibly closed by the server")
-                raise
             except ssl.SSLError:
                 pass
             except socket.error as e:
                 if e.errno == errno.EWOULDBLOCK or e.errno == errno.EAGAIN:
                     pass
-                pass
+            except Exception:
+                # Originally caught ConnectionResetError, but not Python 2 compatible
+                Logs.error("Connection has been forcibly closed by the server")
+                raise
 
     def disconnect(self):
-        self._connection.close()
+        if self._connection is not None:
+            self._connection.close()
 
     def receive(self):
         try:
@@ -72,11 +71,15 @@ class _NetInstance(object):
             time.sleep(0.01)
         except ssl.SSLEOFError:
             Logs.error("Connection closed by plugin server")
+            self._connection = None
             return False
         except KeyboardInterrupt:
             raise
-        except:
-            Logs.error(traceback.format_exc())
+        except Exception as e:
+            msg = "Uncaught {}: {}".format(type(e).__name__, e)
+            Logs.error(msg)
+            time.sleep(0.1)
+            self._connection = None
             return False
         else:
             if len(data) == 0:
@@ -88,7 +91,7 @@ class _NetInstance(object):
     def _received_data(self, data):
         self._data.received_data(data)
         self._processing = True
-        while self._processing == True:
+        while self._processing is True:
             if self._state == _NetInstance.header_state:
                 if self._current_packet.get_header(self._data):
                     self._state = _NetInstance.payload_state

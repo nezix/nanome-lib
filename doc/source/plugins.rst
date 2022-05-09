@@ -16,7 +16,7 @@ There's 3 main classes we need to be concerned with right now.
     * ``PluginInstance``: Collections of hooks and actions to interact with your Nanome Session
     * ``AsyncPluginInstance``: Same as PluginInstance, but allows use of Python asyncio syntax (requires Python >= 3.7)
 
-Note that all future plugins built by Nanome will use AsyncPluginInstance, and we advise you do the same. 
+Note that all future plugins built by Nanome will use AsyncPluginInstance, and we advise you do the same.
 
 
 Arguments
@@ -58,7 +58,7 @@ Starting a plugin is fairly easy. Copy this snippet into a file HelloNanomePlugi
 
   class HelloNanomePlugin(PluginInstance):
       """Get most basic plugin running."""
-      
+
       def on_run(self):
           message = "Hello Nanome!"
           self.send_notification(nanome.util.enums.NotificationTypes.success, message)
@@ -120,17 +120,17 @@ Example of using callback functions to manipulate a Complex.
 
         def on_run(self):
             self.request_complex_list(self.on_shallow_complexes_received)
-            
+
         def on_shallow_complexes_received(self, shallow_complex_list):
             # Once we have the shallow complex, use index to get deep complex, and pass to callback.
             index = shallow_complex_list[0].index
             self.request_complexes([index], self.move_complex_position)
-        
+
         def move_complex_position(self, deep_complexes):
             complex = deep[0]
             complex.position.x += 1
             self.update_structures_deep([complex], self.on_complex_updated)
-        
+
         def on_complex_updated(self, updated_structures):
             Logs.message('done')
 
@@ -173,6 +173,7 @@ Event Handlers
 * ``on_advanced_settings``: Called when user presses "Advanced Settings"
 * ``on_complex_added``: Called whenever a complex is added to the workspace.
 * ``on_complex_removed``: Called whenever a complex is removed from the workspace.
+* ``on_complex_list_changed``: Called whenever a complex is added or removed from the workspace.
 * ``on_presenter_changed``: Called when room's presenter changes.
 
 Spatial Actions
@@ -189,7 +190,7 @@ IO/Streaming
 * ``save_files``: Save files on the machine running Nanome, and returns result
 * ``create_writing_stream``: Create a stream allowing to continuously update properties of many objects
 * ``create_reading_stream``: Create a stream allowing to continuously receive properties of many objects
-* ``open_url``: Opens a URL in Nanome's computer browser
+* ``open_url``: Opens a URL in the web browser
 * ``send_files_to_load``: Send file(s) to Nanome to load directly using Nanome's importers.
 * ``request_export``: Request a file export using Nanome exporters
 * ``set_plugin_list_button``: Set text and/or usable state of the buttons on the plugin connection menu in Nanome
@@ -199,6 +200,7 @@ Workspace API Actions
 
 * ``request_workspace``: Request the entire workspace, in deep mode
 * ``add_to_workspace``: Add a list of complexes to the current workspace
+* ``remove_from_workspace``: Remove a list of complexes from the current workspace
 * ``request_complex_list``: Request the list of all complexes in the workspace, in shallow mode
 * ``request_complexes``: Requests a list of complexes by their indices
 * ``update_workspace``: Replace the current workspace in the scene by the workspace in parameter

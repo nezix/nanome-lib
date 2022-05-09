@@ -1,5 +1,4 @@
 from nanome.util import Logs
-from nanome.util.enum import IntEnum, auto
 from . import _Packet
 import traceback
 
@@ -11,26 +10,23 @@ stop_bytes = bytearray("CLOSEPIPE", "utf-8")
 class _Session(object):
     def _read_from_plugin(self):
         try:
-            has_net_data = self.__net_plugin_pipe.poll()
-            has_proc_data = self.__proc_plugin_pipe.poll()
-        except:
+            has_net_data = not self._net_queue_in.empty()
+            has_proc_data = self._proc_plugin_pipe.poll()
+            self._logs_manager.poll_for_logs()
+        except Exception:
             Logs.error("Plugin encountered an error, please check the logs.", traceback.format_exc())
             return False
         try:
             if has_net_data:
-                packet = self.__net_plugin_pipe.recv()
+                packet = self._net_queue_in.get()
                 if packet == stop_bytes:
                     Logs.error("Plugin encountered an error")
                     return False
                 self._net_plugin.send(packet)
             if has_proc_data:
-                from nanome._internal._util import _DataType
-                request = self.__proc_plugin_pipe.recv()
-                if request._type == _DataType.process:
-                    self._process_manager._received_request(request._data, self)
-                elif request._type == _DataType.log:
-                    if self._logs_manager:
-                        self._logs_manager._received_request(request._data)
+                proc_data = self._proc_plugin_pipe.recv()
+                self._process_manager.received_request(proc_data, self)
+
         except EOFError:
             Logs.error("Plugin encountered an error, please check the logs.", traceback.format_exc())
             return False
@@ -38,14 +34,14 @@ class _Session(object):
 
     def _on_packet_received(self, payload):
         try:
-            self.__net_plugin_pipe.send(payload)
-        except:
+            self._net_queue_out.put(payload)
+        except Exception:
             Logs.error("Cannot deliver packet to plugin", self._session_id, "Did it crash?")
 
     def send_process_data(self, data):
         try:
-            self.__proc_plugin_pipe.send(data)
-        except:
+            self._proc_plugin_pipe.send(data)
+        except Exception:
             Logs.error("Cannot deliver process info to plugin", self._session_id, "Did it crash?")
 
     def _send_disconnection_message(self, plugin_id):
@@ -59,16 +55,17 @@ class _Session(object):
         self.close_pipes()
 
     def close_pipes(self):
-        self.__net_plugin_pipe.close()
-        self.__proc_plugin_pipe.close()
+        self._net_queue_out.close()
+        self._proc_plugin_pipe.close()
         self._process_manager._remove_session_processes(self._session_id)
 
-    def __init__(self, session_id, net_plugin, process_manager, logs_manager, net_pipe, proc_pipe):
+    def __init__(self, session_id, net_plugin, process_manager, logs_manager, net_queue_out, net_queue_in, proc_pipe):
         self._session_id = session_id
         self._net_plugin = net_plugin
         self._process_manager = process_manager
         self._logs_manager = logs_manager
-        self.__net_plugin_pipe = net_pipe
-        self.__proc_plugin_pipe = proc_pipe
+        self._net_queue_out = net_queue_out
+        self._net_queue_in = net_queue_in
+        self._proc_plugin_pipe = proc_pipe
         self.plugin_process = None
         self._closed = False

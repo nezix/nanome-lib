@@ -1,7 +1,5 @@
 import nanome
 from nanome.util import Logs
-import sys
-import time
 
 # Config
 
@@ -42,6 +40,7 @@ def text_submitted_callback(textInput):
 
 
 class UIPlugin(nanome.PluginInstance):
+
     def create_callbacks(self):
         def spawn_menu_callback(button):
             Logs.message("button pressed: " + button.text.value.idle)
@@ -113,10 +112,14 @@ class UIPlugin(nanome.PluginInstance):
             ln.add_new_label(str(self.menu_index - 1))
             self.update_menu(self.previous_menu)
 
+        def change_title(button):
+            menu.title = "New Title"
+            self.update_menu(menu, True)
+
         root = menu.root
         button_node = root.create_child_node("button_node")
         button = button_node.add_new_button("button")
-        button.register_pressed_callback(self.select_button_callback)
+        button.register_pressed_callback(change_title)
 
         self.update_menu(menu)
         self.menu_index += 1
@@ -391,9 +394,6 @@ class UIPlugin(nanome.PluginInstance):
         self.tab_button2 = tab_button_node2.add_new_button("tab2")
         self.tab_button2.register_pressed_callback(tab2_callback)
         return ln
-
-    def __init__(self):
-        pass
 
 
 permissions = [nanome.util.enums.Permissions.local_files_access]

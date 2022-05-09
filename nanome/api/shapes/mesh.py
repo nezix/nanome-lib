@@ -1,5 +1,6 @@
 from nanome._internal._shapes._mesh import _Mesh
 from nanome.util.enums import ShapeType
+
 from . import Shape
 
 
@@ -81,6 +82,34 @@ class Mesh(_Mesh, Shape):
     @uv.setter
     def uv(self, value):
         self._uv = value
+
+    @property
+    def texture_path(self):
+        """
+        | Path to the texture mapped to the mesh, has to be png or jpeg
+
+        :param value: Path to the texture
+        :type value: string
+        """
+        return self._texture_path
+
+    @texture_path.setter
+    def texture_path(self, value):
+        self._texture_path = value
+
+    @property
+    def unlit(self):
+        """
+        | Use unlit material
+
+        :param value: unlit material
+        :type value: bool
+        """
+        return self._unlit
+
+    @unlit.setter
+    def unlit(self, value):
+        self._unlit = value
 
 
 _Mesh._create = Mesh

@@ -1,5 +1,7 @@
 from nanome.util import Logs
 from nanome._internal._util._serializers import _CachedImageSerializer
+from nanome._internal.logs import LogsManager
+
 from . import _Packet
 
 stop_bytes = bytearray("CLOSEPIPE", "utf-8")
@@ -7,31 +9,51 @@ stop_bytes = bytearray("CLOSEPIPE", "utf-8")
 # Plugin networking class, used from the instance processes
 
 
-class _ProcessNetwork(object):
+class PluginNetwork(object):
 
     _instance = None
 
+    def __init__(self, plugin, session_id, queue_net_in, queue_net_out, serializer, plugin_id, version_table):
+        self._plugin = plugin
+        self._session_id = session_id
+        self._queue_net_in = queue_net_in
+        self._queue_net_out = queue_net_out
+        self._serializer = serializer
+        self._serializer._plugin_id = plugin_id
+        self._plugin_id = plugin_id
+        self._command_id = 0
+        self.__version_table = version_table
+
+        _CachedImageSerializer.session = session_id
+        PluginNetwork._instance = self
+
     def _on_run(self):
+        Logs.message("on_run called")
         self._plugin.on_run()
 
     def on_advanced_settings(self):
+        Logs.message("on_advanced_settings called")
         self._plugin.on_advanced_settings()
 
     def on_complex_added(self):
         self._plugin.on_complex_added()
+        self._plugin.on_complex_list_changed()
 
     def on_complex_removed(self):
         self._plugin.on_complex_removed()
+        self._plugin.on_complex_list_changed()
 
     def _on_presenter_change(self):
+        # Reconfigure child process logs so presenter_info is refreshed.
+        LogsManager.configure_child_process(self._plugin)
         self._plugin.on_presenter_change()
 
     def _call(self, request_id, *args):
         self._plugin._call(request_id, *args)
 
     def _close(self):
-        self._process_conn.send(stop_bytes)
-        self._process_conn.close()
+        self._queue_net_out.put(stop_bytes)
+        self._queue_net_out.close()
 
     @classmethod
     def _send_connect(cls, code, arg):
@@ -52,7 +74,7 @@ class _ProcessNetwork(object):
         # if code != 0: # Messages.connect
         #     packet.compress()
         try:
-            self._process_conn.send(packet)
+            self._queue_net_out.put(packet)
         except BrokenPipeError:
             pass  # Ignore, as it will be closed later on, during _receive
         self._command_id = (command_id + 1) % 4294967295  # Cap by uint max
@@ -61,9 +83,9 @@ class _ProcessNetwork(object):
     def _receive(self):
         payload = None
         try:
-            has_data = self._process_conn.poll()
+            has_data = not self._queue_net_in.empty()
             if has_data:
-                payload = self._process_conn.recv()
+                payload = self._queue_net_in.get()
         except BrokenPipeError:
             Logs.debug("Pipe has been closed, exiting process")
             self._plugin._on_stop()
@@ -86,17 +108,3 @@ class _ProcessNetwork(object):
                 return True
             callback(self, received_object, request_id)
         return True
-
-    def __init__(self, plugin, session_id, pipe, serializer, plugin_id, version_table):
-        self._plugin = plugin
-        self._session_id = session_id
-        self._process_conn = pipe
-        self._serializer = serializer
-        self._serializer._plugin_id = plugin_id
-        self._plugin_id = plugin_id
-        self._command_id = 0
-        self.__version_table = version_table
-
-        _CachedImageSerializer.session = session_id
-
-        _ProcessNetwork._instance = self
