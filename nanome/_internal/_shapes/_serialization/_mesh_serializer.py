@@ -2,16 +2,16 @@ import os
 import tempfile
 
 from nanome._internal._shapes._mesh import _Mesh
-from nanome._internal._util._serializers import _TypeSerializer
+from nanome._internal._util._serializers import _TypeSerializer, _ArraySerializer, _StringSerializer
 from nanome.util import Logs
 
 
 class _MeshSerializer(_TypeSerializer):
     def __init__(self):
-        pass
+        self.string = _StringSerializer()
 
     def version(self):
-        return 1
+        return 2
 
     def name(self):
         return "MeshShape"
@@ -48,6 +48,8 @@ class _MeshSerializer(_TypeSerializer):
 
         if version >= 1:
             context.write_bool(value.unlit)
+        if version >= 2:
+            context.write_using_serializer(self.string, value.name)
 
     def create_texture_file(self, texture_path, texture_bytes):
         with open(texture_path, "wb") as f:
@@ -64,6 +66,8 @@ class _MeshSerializer(_TypeSerializer):
 
         if version >= 1:
             result.unlit = context.read_bool()
+        if version >= 2:
+            result.name = context.read_using_serializer(self.string)
 
         if len(texture_bytes) > 0:
             temp_texture = tempfile.NamedTemporaryFile(delete=False, suffix='png')

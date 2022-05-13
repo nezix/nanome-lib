@@ -111,5 +111,20 @@ class Mesh(_Mesh, Shape):
     def unlit(self, value):
         self._unlit = value
 
+    @property
+    def name(self):
+        """
+        | Name of the mesh
+
+        :param value: name
+        :type value: string
+        """
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
+
+
 
 _Mesh._create = Mesh

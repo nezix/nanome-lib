@@ -15,6 +15,7 @@ class _Mesh(_Shape):
         self._uv = []
         self._texture_path = ""
         self._unlit = False
+        self._name = ""
 
     @classmethod
     def _create(cls):
